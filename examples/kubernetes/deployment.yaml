@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: wordpress
     app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: helm
 spec:
   replicas: 3
   selector:

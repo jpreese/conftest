@@ -12,6 +12,8 @@ import (
 func BuildCompiler(files []string) (*ast.Compiler, error) {
 	modules := map[string]*ast.Module{}
 
+	fmt.Printf("building compiler for files: %v\n", files)
+
 	for _, file := range files {
 		out, err := ioutil.ReadFile(file)
 		if err != nil {
@@ -24,6 +26,7 @@ func BuildCompiler(files []string) (*ast.Compiler, error) {
 		}
 
 		modules[file] = parsed
+		fmt.Printf("setting module file: %v\n", file)
 	}
 
 	compiler := ast.NewCompiler()

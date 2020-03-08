@@ -177,6 +177,14 @@ func NewTestCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("build compiler: %w", err)
 			}
 
+			fmt.Println("----")
+			fmt.Println("----")
+			for key := range compiler.Modules {
+				fmt.Printf("FIRST file: %v\n", key)
+			}
+			fmt.Println("----")
+			fmt.Println("----")
+
 			dataPaths := viper.GetStringSlice("data")
 			store, err := policy.StoreFromDataFiles(dataPaths)
 			if err != nil {
@@ -306,6 +314,10 @@ func (t TestRun) runRules(ctx context.Context, namespace string, input interface
 		for _, rule := range module.Rules {
 			ruleName := rule.Head.Name.String()
 
+			if regex.MatchString(ruleName) {
+				fmt.Printf("rulename: %v\n", ruleName)
+			}
+
 			if regex.MatchString(ruleName) && !stringInSlice(ruleName, rules) {
 				rules = append(rules, ruleName)
 			}
@@ -365,6 +377,7 @@ func (t TestRun) runMultipleQueries(ctx context.Context, query string, inputs in
 }
 
 func (t TestRun) runQuery(ctx context.Context, query string, input interface{}) ([]Result, []Result, error) {
+	fmt.Printf("running query: %v\n", query)
 	rego, stdout := t.buildRego(viper.GetBool("trace"), query, input)
 	resultSet, err := rego.Eval(ctx)
 	if err != nil {
@@ -391,8 +404,9 @@ func (t TestRun) runQuery(ctx context.Context, query string, input interface{}) 
 	var errs []Result
 	var successes []Result
 	for _, result := range resultSet {
-		for _, expression := range result.Expressions {
 
+		for _, expression := range result.Expressions {
+			fmt.Printf("expr: %v\n", expression)
 			if !hasResults(expression.Value) {
 				successes = append(successes, NewResult(expression.Text, traces))
 				continue
