@@ -23,7 +23,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/open-policy-agent/opa v0.20.5
 	github.com/opencontainers/image-spec v1.0.1
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.7
 	github.com/spf13/viper v1.7.0
 	github.com/zclconf/go-cty v1.2.0
 	gopkg.in/ini.v1 v1.52.0 // indirect
