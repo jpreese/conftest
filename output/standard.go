@@ -48,6 +48,27 @@ func (s *StandardOutputManager) Flush() error {
 	var totalWarnings int
 	var totalSuccesses int
 
+	if s.tracing {
+		for _, result := range s.results {
+			for _, q := range result.Queries {
+				var color aurora.Color
+				if q.Passed() {
+					color = aurora.GreenFg
+				} else {
+					color = aurora.RedFg
+				}
+
+				s.logger.Print(s.color.Colorize("file: "+result.FileName+" | query: "+q.Query, color))
+
+				for _, t := range q.Traces {
+					s.logger.Print(s.color.Colorize("TRAC ", aurora.BlueFg), "", t)
+				}
+				s.logger.Println("")
+			}
+		}
+		return nil
+	}
+
 	for _, cr := range s.results {
 		var indicator string
 		if cr.FileName == "-" {
@@ -56,7 +77,7 @@ func (s *StandardOutputManager) Flush() error {
 			indicator = fmt.Sprintf(" - %s - ", cr.FileName)
 		}
 
-		currentPolicies := len(cr.Successes) + len(cr.Warnings) + len(cr.Failures) + len(cr.Exceptions)
+		currentPolicies := cr.Successes + len(cr.Warnings) + len(cr.Failures) + len(cr.Exceptions)
 		if currentPolicies == 0 {
 			s.logger.Print(s.color.Colorize("?", aurora.WhiteFg), indicator, "no policies found")
 			continue
@@ -64,18 +85,6 @@ func (s *StandardOutputManager) Flush() error {
 
 		printResults := func(r Result, prefix string, color aurora.Color) {
 			s.logger.Print(s.color.Colorize(prefix, color), indicator, r.Message)
-			if s.tracing {
-				for _, t := range r.Traces {
-					s.logger.Print(s.color.Colorize("TRAC", aurora.BlueFg), indicator, t)
-				}
-			}
-
-		}
-
-		for _, r := range cr.Successes {
-			if s.tracing && len(r.Traces) > 0 {
-				printResults(r, "PASS", aurora.GreenFg)
-			}
 		}
 
 		for _, r := range cr.Warnings {
@@ -93,7 +102,7 @@ func (s *StandardOutputManager) Flush() error {
 		totalFailures += len(cr.Failures)
 		totalExceptions += len(cr.Exceptions)
 		totalWarnings += len(cr.Warnings)
-		totalSuccesses += len(cr.Successes)
+		totalSuccesses += cr.Successes
 	}
 
 	totalPolicies := totalFailures + totalExceptions + totalWarnings + totalSuccesses

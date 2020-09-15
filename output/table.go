@@ -35,20 +35,35 @@ func (t *TableOutputManager) WithTracing() OutputManager {
 
 // Put puts the result of the check to the manager in the managers buffer
 func (t *TableOutputManager) Put(cr CheckResult) error {
+	if t.tracing {
+		table := table.NewWriter(os.Stdout)
+		table.SetHeader([]string{"passed", "file", "query", "trace"})
+		t.table = table
+
+		for _, queryResult := range cr.Queries {
+			for _, trace := range queryResult.Traces {
+				var result string
+				if queryResult.Passed() {
+					result = "success"
+				} else {
+					result = "fail"
+				}
+
+				line := []string{result, cr.FileName, queryResult.Query, trace}
+				table.Append(line)
+			}
+		}
+
+		return nil
+	}
+
 	printResults := func(r Result, prefix string, filename string) {
 		d := []string{prefix, filename, r.Message}
 		t.table.Append(d)
-
-		if t.tracing {
-			for _, trace := range r.Traces {
-				dt := []string{"trace", filename, trace.Error()}
-				t.table.Append(dt)
-			}
-		}
 	}
 
-	for _, r := range cr.Successes {
-		printResults(r, "success", cr.FileName)
+	for s := 0; s < cr.Successes; s++ {
+		printResults(Result{}, "success", cr.FileName)
 	}
 
 	for _, r := range cr.Warnings {

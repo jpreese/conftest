@@ -20,14 +20,17 @@ func TestJSON(t *testing.T) {
 		{
 			msg: "no Warnings or errors",
 			args: args{
-				crs: []CheckResult{{FileName: "examples/kubernetes/service.yaml"}},
+				crs: []CheckResult{
+					{FileName: "examples/kubernetes/service.yaml"},
+				},
 			},
 			exp: `[
 	{
 		"filename": "examples/kubernetes/service.yaml",
 		"successes": 0,
 		"warnings": [],
-		"failures": []
+		"failures": [],
+		"exceptions": []
 	}
 ]
 `,
@@ -35,11 +38,13 @@ func TestJSON(t *testing.T) {
 		{
 			msg: "records failure and Warnings",
 			args: args{
-				crs: []CheckResult{{
-					FileName: "examples/kubernetes/service.yaml",
-					Warnings: []Result{NewResult("first warning", []error{})},
-					Failures: []Result{NewResult("first failure", []error{})},
-				}},
+				crs: []CheckResult{
+					{
+						FileName: "examples/kubernetes/service.yaml",
+						Warnings: []Result{{Message: "first warning"}},
+						Failures: []Result{{Message: "first failure"}},
+					},
+				},
 			},
 			exp: `[
 	{
@@ -54,7 +59,8 @@ func TestJSON(t *testing.T) {
 			{
 				"msg": "first failure"
 			}
-		]
+		],
+		"exceptions": []
 	}
 ]
 `,
@@ -62,10 +68,14 @@ func TestJSON(t *testing.T) {
 		{
 			msg: "mixed failure and Warnings",
 			args: args{
-				crs: []CheckResult{{
-					FileName: "examples/kubernetes/service.yaml",
-					Failures: []Result{NewResult("first failure", []error{})},
-				}},
+				crs: []CheckResult{
+					{
+						FileName: "examples/kubernetes/service.yaml",
+						Failures: []Result{
+							{Message: "first failure"},
+						},
+					},
+				},
 			},
 			exp: `[
 	{
@@ -76,7 +86,8 @@ func TestJSON(t *testing.T) {
 			{
 				"msg": "first failure"
 			}
-		]
+		],
+		"exceptions": []
 	}
 ]
 `,
@@ -85,8 +96,12 @@ func TestJSON(t *testing.T) {
 			msg: "handles stdin input",
 			args: args{
 				fileName: "-",
-				crs: []CheckResult{{
-					Failures: []Result{NewResult("first failure", []error{})}},
+				crs: []CheckResult{
+					{
+						Failures: []Result{
+							{Message: "first failure"},
+						},
+					},
 				},
 			},
 			exp: `[
@@ -98,7 +113,8 @@ func TestJSON(t *testing.T) {
 			{
 				"msg": "first failure"
 			}
-		]
+		],
+		"exceptions": []
 	}
 ]
 `,
@@ -116,18 +132,21 @@ func TestJSON(t *testing.T) {
 		"filename": "examples/kubernetes/service.yaml",
 		"successes": 0,
 		"warnings": [],
-		"failures": []
+		"failures": [],
+		"exceptions": []
 	},
 	{
 		"filename": "examples/kubernetes/deployment.yaml",
 		"successes": 0,
 		"warnings": [],
-		"failures": []
+		"failures": [],
+		"exceptions": []
 	}
 ]
 `,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.msg, func(t *testing.T) {
 			buf := new(bytes.Buffer)

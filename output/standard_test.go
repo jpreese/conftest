@@ -24,8 +24,8 @@ func TestStandard(t *testing.T) {
 			args: args{
 				cr: CheckResult{
 					FileName: "foo.yaml",
-					Warnings: []Result{NewResult("first warning", []error{})},
-					Failures: []Result{NewResult("first failure", []error{})},
+					Warnings: []Result{{Message: "first warning"}},
+					Failures: []Result{{Message: "first failure"}},
 				},
 			},
 			exp: []string{
@@ -40,8 +40,8 @@ func TestStandard(t *testing.T) {
 			args: args{
 				cr: CheckResult{
 					FileName: "-",
-					Warnings: []Result{NewResult("first warning", []error{})},
-					Failures: []Result{NewResult("first failure", []error{})},
+					Warnings: []Result{{Message: "first warning"}},
+					Failures: []Result{{Message: "first failure"}},
 				},
 			},
 			exp: []string{

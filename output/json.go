@@ -7,23 +7,10 @@ import (
 	"os"
 )
 
-type jsonResult struct {
-	Message  string                 `json:"msg"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	Traces   []string               `json:"traces,omitempty"`
-}
-
-type jsonCheckResult struct {
-	Filename  string       `json:"filename"`
-	Successes int          `json:"successes"`
-	Warnings  []jsonResult `json:"warnings"`
-	Failures  []jsonResult `json:"failures"`
-}
-
 // JSONOutputManager formats its output to JSON.
 type JSONOutputManager struct {
 	logger  *log.Logger
-	data    []jsonCheckResult
+	data    []CheckResult
 	tracing bool
 }
 
@@ -51,42 +38,54 @@ func (j *JSONOutputManager) Put(cr CheckResult) error {
 		cr.FileName = ""
 	}
 
-	result := jsonCheckResult{
-		Filename:  cr.FileName,
-		Successes: 0,
-		Warnings:  []jsonResult{},
-		Failures:  []jsonResult{},
+	checkResult := CheckResult{
+		FileName:   cr.FileName,
+		Successes:  cr.Successes,
+		Warnings:   []Result{},
+		Failures:   []Result{},
+		Exceptions: []Result{},
 	}
 
 	for _, warning := range cr.Warnings {
-		jsonResult := jsonResult{
+		result := Result{
 			Message:  warning.Message,
 			Metadata: warning.Metadata,
 		}
 
-		if j.tracing {
-			jsonResult.Traces = errsToStrings(warning.Traces)
-		}
-
-		result.Warnings = append(result.Warnings, jsonResult)
+		checkResult.Warnings = append(checkResult.Warnings, result)
 	}
 
 	for _, failure := range cr.Failures {
-		jsonResult := jsonResult{
+		result := Result{
 			Message:  failure.Message,
 			Metadata: failure.Metadata,
 		}
 
-		if j.tracing {
-			jsonResult.Traces = errsToStrings(failure.Traces)
-		}
-
-		result.Failures = append(result.Failures, jsonResult)
+		checkResult.Failures = append(checkResult.Failures, result)
 	}
 
-	result.Successes = len(cr.Successes)
-	j.data = append(j.data, result)
+	for _, exception := range cr.Exceptions {
+		result := Result{
+			Message:  exception.Message,
+			Metadata: exception.Metadata,
+		}
 
+		checkResult.Exceptions = append(checkResult.Exceptions, result)
+	}
+
+	if j.tracing {
+		for _, query := range cr.Queries {
+			queryResult := QueryResult{
+				Query:   query.Query,
+				Results: query.Results,
+				Traces:  query.Traces,
+			}
+
+			checkResult.Queries = append(checkResult.Queries, queryResult)
+		}
+	}
+
+	j.data = append(j.data, checkResult)
 	return nil
 }
 
@@ -105,13 +104,4 @@ func (j *JSONOutputManager) Flush() error {
 
 	j.logger.Print(out.String())
 	return nil
-}
-
-func errsToStrings(errs []error) []string {
-	res := []string{}
-	for _, err := range errs {
-		res = append(res, err.Error())
-	}
-
-	return res
 }
