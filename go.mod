@@ -16,9 +16,9 @@ require (
 	github.com/hashicorp/hcl v1.0.0
 	github.com/jstemmer/go-junit-report v0.9.1
 	github.com/logrusorgru/aurora v2.0.3+incompatible
-	github.com/moby/buildkit v0.8.1
-	github.com/olekukonko/tablewriter v0.0.5
-	github.com/open-policy-agent/opa v0.25.2
+	github.com/moby/buildkit v0.3.3
+	github.com/olekukonko/tablewriter v0.0.1
+	github.com/open-policy-agent/opa v0.26.0
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/shteou/go-ignore v0.3.0
 	github.com/spf13/cobra v1.1.3
