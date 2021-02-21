@@ -26,7 +26,7 @@ namespace = "conftest"
 
 This flag introduces *BREAKING CHANGES* in how Conftest provides input to rego policies. However, you may find it useful to use as it allows you to compare multiple values from different configurations simultaneously.
 
-The `--combine` flag combines files into one `input` data structure. The structure is a `map` where each index is the file path of the file being evaluated.
+The `--combine` flag combines files into one `input` data structure. The structure is an `array` where each element is a `map` with two keys: a `path` key with the relative file path of the file being evaluated and a `contents` key containing the actual document.
 
 Let's try it!
 
@@ -160,20 +160,6 @@ As of today Conftest supports the following output types:
 - Table `--output=table`
 - JUnit `--output=junit`
 
-## `--parser`
-
-Conftest normally detects which parser to used based on the file extension of the file, even when multiple input files are passed in. However, it is possible force a specific parser to be used with the `--parser` flag.
-
-For the available parsers, take a look at [parsers](https://github.com/open-policy-agent/conftest/tree/master/parser).
-
-For instance:
-
-```console
-$ conftest test -p examples/hcl1/policy examples/hcl1/gke.tf --parser hcl2
-
-2 tests, 2 passed, 0 warnings, 0 failures, 0 exceptions
-```
-
 ### Plaintext
 
 ```console
@@ -247,7 +233,7 @@ $ conftest test -p examples/kubernetes/policy examples/kubernetes/service.yaml -
 ### JUnit
 
 ```console
-$ conftest test -p examples/kubernetes/policy examples/kubernetes/service.yaml -o table
+$ conftest test -p examples/kubernetes/policy examples/kubernetes/service.yaml -o junit
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
         <testsuite tests="5" failures="4" time="0.000" name="conftest">
@@ -268,6 +254,20 @@ $ conftest test -p examples/kubernetes/policy examples/kubernetes/service.yaml -
                 </testcase>
                 <testcase classname="conftest" name="examples/kubernetes/deployment.yaml - " time="0.000"></testcase>
         </testsu
+```
+
+## `--parser`
+
+Conftest normally detects which parser to used based on the file extension of the file, even when multiple input files are passed in. However, it is possible force a specific parser to be used with the `--parser` flag.
+
+For the available parsers, take a look at [parsers](https://github.com/open-policy-agent/conftest/tree/master/parser).
+
+For instance:
+
+```console
+$ conftest test -p examples/hcl1/policy examples/hcl1/gke.tf --parser hcl2
+
+2 tests, 2 passed, 0 warnings, 0 failures, 0 exceptions
 ```
 
 ## `--policy`

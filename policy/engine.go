@@ -61,7 +61,7 @@ func Load(ctx context.Context, policyPaths []string) (*Engine, error) {
 	return &engine, nil
 }
 
-// Load returns an Engine after loading all of the specified policies and data paths.
+// LoadWithData returns an Engine after loading all of the specified policies and data paths.
 func LoadWithData(ctx context.Context, policyPaths []string, dataPaths []string) (*Engine, error) {
 	engine, err := Load(ctx, policyPaths)
 	if err != nil {
@@ -121,6 +121,7 @@ func (e *Engine) Check(ctx context.Context, configs map[string]interface{}, name
 
 			checkResult := output.CheckResult{
 				FileName: path,
+				Namespace: namespace,
 			}
 			for _, subconfig := range subconfigs {
 				result, err := e.check(ctx, path, subconfig, namespace)
@@ -132,6 +133,7 @@ func (e *Engine) Check(ctx context.Context, configs map[string]interface{}, name
 				checkResult.Failures = append(checkResult.Failures, result.Failures...)
 				checkResult.Warnings = append(checkResult.Warnings, result.Warnings...)
 				checkResult.Exceptions = append(checkResult.Exceptions, result.Exceptions...)
+				checkResult.Queries = append(checkResult.Queries, result.Queries...)
 			}
 			checkResults = append(checkResults, checkResult)
 			continue
@@ -246,10 +248,11 @@ func (e *Engine) check(ctx context.Context, path string, config interface{}, nam
 
 	checkResult := output.CheckResult{
 		FileName: path,
+		Namespace: namespace,
 	}
 	for rule, count := range rules {
 		exceptionQuery := fmt.Sprintf("data.%s.exception[_][_] == %q", namespace, removeRulePrefix(rule))
-		exceptionQueryResult, err := e.query(ctx, config, exceptionQuery)
+		exceptionQueryResult, err := e.query(ctx, config, exceptionQuery, namespace)
 		if err != nil {
 			return output.CheckResult{}, fmt.Errorf("query exception: %w", err)
 		}
@@ -267,7 +270,7 @@ func (e *Engine) check(ctx context.Context, path string, config interface{}, nam
 		}
 
 		ruleQuery := fmt.Sprintf("data.%s.%s", namespace, rule)
-		ruleQueryResult, err := e.query(ctx, config, ruleQuery)
+		ruleQueryResult, err := e.query(ctx, config, ruleQuery, namespace)
 		if err != nil {
 			return output.CheckResult{}, fmt.Errorf("query rule: %w", err)
 		}
@@ -311,7 +314,7 @@ func (e *Engine) check(ctx context.Context, path string, config interface{}, nam
 // Example queries could include:
 // data.main.deny to query the deny rule in the main namespace
 // data.main.warn to query the warn rule in the main namespace
-func (e *Engine) query(ctx context.Context, input interface{}, query string) (output.QueryResult, error) {
+func (e *Engine) query(ctx context.Context, input interface{}, query string, namespace string) (output.QueryResult, error) {
 	stdout := topdown.NewBufferTracer()
 	options := []func(r *rego.Rego){
 		rego.Input(input),

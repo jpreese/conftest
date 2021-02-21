@@ -31,6 +31,22 @@ jobs:
       - store_test_results:
           path: /tmp/test-results
 
+  lint:
+    docker:
+      - image: circleci/golang:1.13-node
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-{{ checksum "go.sum" }}
+      - run:
+          name: Install golint
+          command: go get golang.org/x/lint/golint
+      - run:
+          name: Lint & check
+          command: make check
+
   acceptance:
     docker:
       - image: circleci/golang:1.13-node
@@ -77,13 +93,24 @@ jobs:
   release_docker:
     docker:
       - image: circleci/golang:1.13-node
+    
+    environment:
+      DOCKER_BUILDKIT: 1
 
     steps:
       - checkout
       - setup_remote_docker
       - docker/check
+      - run:
+          name: Setup docker build environment
+          command: |
+            GIT_COMMIT=$(git rev-parse HEAD)
+            DATE=$(date)
+            echo 'export GIT_COMMIT="$GIT_COMMIT"' >> $BASH_ENV
+            echo 'export DATE="$DATE"' >> $BASH_ENV
       - docker/build:
           image: openpolicyagent/conftest
+          extra_build_args: "--build-arg VERSION=$CIRCLE_TAG --build-arg COMMIT=$GIT_COMMIT --build-arg DATE=$DATE"
           tag: $CIRCLE_TAG,latest
       - docker/push:
           image: openpolicyagent/conftest
@@ -110,6 +137,7 @@ workflows:
   build:
     jobs:
       - test
+      - lint
       - acceptance
       - buildimage
       - release_docker:

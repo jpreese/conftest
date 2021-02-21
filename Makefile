@@ -1,38 +1,50 @@
+## DEVELOPMENT
+.PHONY: build
+build: 
+	@go build
 
+.PHONY: test
+test: 
+	@go test -v ./...
+
+.PHONY: acceptance
+acceptance: 
+	@bats acceptance.bats
+
+.PHONY: all
+all: build test acceptance
+
+## RELEASES
 TAG=$(shell git describe --abbrev=0 --tags)
+IMAGE=openpolicyagent/conftest
+GIT_COMMIT=$(shell git rev-parse HEAD)
+GIT_TAG=$(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
+DATE=$(shell date)
 
-NAME=conftest
-IMAGE=openpolicyagent/$(NAME)
-ALT_IMAGE=instrumenta/$(NAME)
+VERSION = unreleased
+ifneq ($(GIT_TAG),)
+	VERSION = $(GIT_TAG)
+endif
 
-COMMAND=docker
-BUILD=DOCKER_BUILDKIT=1 $(COMMAND) build --pull
-PUSH=$(COMMAND) push
+.PHONY: image
+image:
+	@docker build --build-arg VERSION="$(VERSION)" --build-arg COMMIT="$(GIT_COMMIT)" --build-arg DATE="$(DATE)" . -t $(IMAGE):$(TAG) 
+	@docker tag $(IMAGE):$(TAG) $(IMAGE):latest
 
-all: push
-
+.PHONY: examples
 examples:
-	$(BUILD) --target examples -t $(IMAGE):examples .
-	$(COMMAND) tag $(IMAGE):examples $(ALT_IMAGE):examples
+	@docker build . --target examples -t $(IMAGE):examples
 
-acceptance:
-	$(BUILD) --target acceptance .
+.PHONY: push
+push: examples image
+	@docker push $(IMAGE):$(TAG)
+	@docker push $(IMAGE):latest
+	@docker push $(IMAGE):examples
 
-conftest:
-	$(BUILD) -t $(IMAGE):$(TAG) .
-	$(COMMAND) tag $(IMAGE):$(TAG) $(IMAGE):latest
-	$(COMMAND) tag $(IMAGE):$(TAG) $(ALT_IMAGE):latest
-	$(COMMAND) tag $(IMAGE):$(TAG) $(ALT_IMAGE):$(TAG)
+check-vet:
+	@go vet ./...
 
-test: conftest
-	$(BUILD) --target test .
+check-lint:
+	@golint -set_exit_status ./...
 
-push: examples conftest
-	$(PUSH) $(IMAGE):$(TAG)
-	$(PUSH) $(IMAGE):latest
-	$(PUSH) $(ALT_IMAGE):$(TAG)
-	$(PUSH) $(ALT_IMAGE):latest
-	$(PUSH) $(IMAGE):examples
-	$(PUSH) $(ALT_IMAGE):examples
-
-.PHONY: examples acceptance conftest push all
+check: check-vet check-lint

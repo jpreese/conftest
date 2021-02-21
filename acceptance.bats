@@ -138,6 +138,18 @@
   [[ "$output" =~ "Concat array should be less than 3" ]]
 }
 
+@test "Can parse .dockerignore files" {
+  run ./conftest test -p examples/ignore/dockerignore/policy examples/ignore/dockerignore/.dockerignore
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ ".git directories should be ignored" ]]
+}
+
+@test "Can parse .gitignore files" {
+  run ./conftest test -p examples/ignore/gitignore/policy examples/ignore/gitignore/.gitignore
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "id_rsa files should be ignored" ]]
+}
+
 @test "Can parse multi-type files" {
   run ./conftest test -p examples/multitype/policy examples/multitype/deployment.yaml examples/multitype/grafana.ini
   [ "$status" -eq  1 ]
@@ -167,7 +179,7 @@
 }
 
 @test "Can parse hcl files" {
-  run ./conftest test -p examples/hcl/policy examples/hcl/terraform.tf
+  run ./conftest test -p examples/hcl2/policy examples/hcl2/terraform.tf
   [ "$status" -eq 1 ]
   [[ "$output" =~ "ALB \`my-alb-listener\` is using HTTP rather than HTTP" ]]
 }

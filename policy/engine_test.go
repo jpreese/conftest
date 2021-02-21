@@ -83,6 +83,13 @@ func TestMultifileYaml(t *testing.T) {
 	if actualSuccesses != expectedSuccesses {
 		t.Errorf("Multifile yaml test failure. Got %v successes, expected %v", actualSuccesses, expectedSuccesses)
 	}
+
+	// 10 warnings/failures/successes queries, and 2 dummy exception queries
+	const expectedQueries = 12
+	actualQueries := len(results[0].Queries)
+	if actualQueries != expectedQueries {
+		t.Errorf("Multifile yaml test failure. Got %v queries, expected %v", actualQueries, expectedQueries)
+	}
 }
 
 func TestDockerfile(t *testing.T) {
@@ -115,6 +122,13 @@ func TestDockerfile(t *testing.T) {
 	actualSuccesses := results[0].Successes
 	if actualSuccesses != expectedSuccesses {
 		t.Errorf("Dockerfile test failure. Got %v successes, expected %v", actualSuccesses, expectedSuccesses)
+	}
+
+	// 1 failure, and 1 dummy exception query
+	const expectedQueries = 2
+	actualQueries := len(results[0].Queries)
+	if actualQueries != expectedQueries {
+		t.Errorf("Dockerfile test failure. Got %v queries, expected %v", actualQueries, expectedQueries)
 	}
 }
 
