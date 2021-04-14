@@ -1,12 +1,14 @@
-FROM golang:1.13-alpine as base
-ARG ARCH=amd64
+FROM golang:1.16-alpine AS base
+
 ARG VERSION
 ARG COMMIT
 ARG DATE
-ENV GOOS=linux \
-    CGO_ENABLED=0 \
-    GOARCH=${ARCH}
-RUN apk add --no-cache git
+
+ENV CGO_ENABLED=0
+
+RUN apk add --no-cache npm bash make git
+RUN npm install -g bats
+
 WORKDIR /app
 
 COPY go.mod .
@@ -15,25 +17,21 @@ RUN go mod download
 
 COPY . .
 
-## BUILDER STAGE ##
-FROM base as builder
+## Builder
+FROM base AS builder
 RUN go build -o conftest -ldflags="-w -s -X github.com/open-policy-agent/conftest/internal/commands.version=${VERSION} -X github.com/open-policy-agent/conftest/internal/commands.commit=${COMMIT} -X github.com/open-policy-agent/conftest/internal/commands.date=${DATE}" main.go
 
-## TEST STAGE ##
-FROM base as test
-RUN go test -v ./...
-
-## ACCEPTANCE STAGE ##
-FROM base as acceptance
+## Testing
+FROM base AS testing
 COPY --from=builder /app/conftest /app/conftest
 
-RUN apk add --no-cache npm bash
-RUN npm install -g bats
+WORKDIR /app
 
-RUN bats acceptance.bats
+RUN make all
 
-## EXAMPLES STAGE ##
-FROM base as examples
+## Examples
+FROM base AS examples
+
 ENV TERRAFORM_VERSION=0.12.28 \
     KUSTOMIZE_VERSION=2.0.3
 
@@ -52,8 +50,8 @@ RUN go get -u cuelang.org/go/cmd/cue
 
 WORKDIR /examples
 
-## RELEASE ##
-FROM alpine:latest
+## Release
+FROM alpine:latest AS release
 
 # Install git for protocols that depend on it when using conftest pull
 RUN apk add --no-cache git

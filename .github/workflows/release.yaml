@@ -1,0 +1,20 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: validate
+        run: make all
+
+      - name: get version
+        id: version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}

@@ -1,6 +1,7 @@
 before:
   hooks:
     - go mod download
+
 builds:
 - main: ./main.go
   env:
@@ -18,6 +19,7 @@ builds:
   - "-X github.com/open-policy-agent/conftest/internal/commands.version={{.Version}}"
   - "-X github.com/open-policy-agent/conftest/internal/commands.commit={{.ShortCommit}}"
   - "-X github.com/open-policy-agent/conftest/internal/commands.date={{.Date}}"
+
 archives:
 - replacements:
     darwin: Darwin
@@ -33,16 +35,20 @@ archives:
       - LICENSE
       - README.md
       - plugin/*.sh
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
   filters:
     exclude:
     - '^docs:'
     - '^test:'
+
 brews:
 - tap:
     owner: instrumenta
@@ -52,12 +58,14 @@ brews:
   homepage: "https://github.com/open-policy-agent/conftest"
   test: |
     system "#{bin}/conftest --version"
+
 scoop:
   bucket:
     owner: instrumenta
     name: scoop-instrumenta
   description: "Test your configuration using Open Policy Agent"
   homepage: "https://github.com/open-policy-agent/conftest"
+
 nfpms:
   - bindir: /usr/bin
     description: "Test your configuration using Open Policy Agent"
