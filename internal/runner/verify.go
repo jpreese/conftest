@@ -8,6 +8,7 @@ import (
 
 	"github.com/open-policy-agent/conftest/output"
 	"github.com/open-policy-agent/conftest/policy"
+	"github.com/open-policy-agent/opa/cover"
 	"github.com/open-policy-agent/opa/tester"
 	"github.com/open-policy-agent/opa/topdown"
 )
@@ -15,11 +16,12 @@ import (
 // VerifyRunner is the runner for the Verify command, executing
 // Rego policy unit-tests.
 type VerifyRunner struct {
-	Policy  []string
-	Data    []string
-	Output  string
-	NoColor bool `mapstructure:"no-color"`
-	Trace   bool
+	Coverage int
+	Policy   []string
+	Data     []string
+	Output   string
+	NoColor  bool `mapstructure:"no-color"`
+	Trace    bool
 }
 
 // Run executes the Rego tests for the given policies.
@@ -33,11 +35,29 @@ func (r *VerifyRunner) Run(ctx context.Context) ([]output.CheckResult, error) {
 		engine.EnableTracing()
 	}
 
-	runner := tester.NewRunner().SetCompiler(engine.Compiler()).SetStore(engine.Store()).SetModules(engine.Modules()).EnableTracing(r.Trace).SetRuntime(engine.Runtime())
+	cov := cover.New()
+
+	runner := tester.NewRunner().
+		SetCompiler(engine.Compiler()).
+		SetStore(engine.Store()).
+		SetModules(engine.Modules()).
+		//EnableTracing(r.Trace).
+		SetRuntime(engine.Runtime()).
+		SetCoverageQueryTracer(cov)
+
 	ch, err := runner.RunTests(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("running tests: %w", err)
 	}
+
+	/*
+		var reporter tester.Reporter
+		reporter = tester.JSONCoverageReporter{
+			Cover:     cov,
+			Modules:   engine.Modules(),
+			Output:    os.Stdout,
+			Threshold: 50,
+		}*/
 
 	var results []output.CheckResult
 	for result := range ch {
@@ -79,6 +99,16 @@ func (r *VerifyRunner) Run(ctx context.Context) ([]output.CheckResult, error) {
 
 		results = append(results, checkResult)
 	}
+
+	if r.Coverage > 0 {
+
+	}
+
+	report := cov.Report(engine.Modules())
+
+	fmt.Println("below")
+	fmt.Println(cov.Report(engine.Modules()).Files["examples/kubernetes/policy/labels.rego"].Coverage)
+	fmt.Println(report.Coverage)
 
 	return results, nil
 }

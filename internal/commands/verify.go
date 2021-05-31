@@ -63,7 +63,7 @@ func NewVerifyCommand(ctx context.Context) *cobra.Command {
 		Short: "Verify Rego unit tests",
 		Long:  verifyDesc,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			flagNames := []string{"data", "no-color", "output", "policy", "trace"}
+			flagNames := []string{"data", "no-color", "output", "policy", "trace", "coverage"}
 			for _, name := range flagNames {
 				if err := viper.BindPFlag(name, cmd.Flags().Lookup(name)); err != nil {
 					return fmt.Errorf("bind flag: %w", err)
@@ -100,9 +100,11 @@ func NewVerifyCommand(ctx context.Context) *cobra.Command {
 	cmd.Flags().Bool("no-color", false, "Disable color when printing")
 	cmd.Flags().Bool("trace", false, "Enable more verbose trace output for Rego queries")
 
+	cmd.Flags().Int("coverage", 0, "do stuff")
+
 	cmd.Flags().StringP("output", "o", output.OutputStandard, fmt.Sprintf("Output format for conftest results - valid options are: %s", output.Outputs()))
 
-	cmd.Flags().StringSliceP("data", "d", []string{}, "A list of paths from which data for the rego policies will be recursively loaded")
+	cmd.Flags().StringSliceP("data", "d", []string{}, "A list of paths from which data for the Rego policies will be recursively loaded")
 	cmd.Flags().StringSliceP("policy", "p", []string{"policy"}, "Path to the Rego policy files directory")
 
 	return &cmd
