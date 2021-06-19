@@ -3,7 +3,7 @@ module github.com/open-policy-agent/conftest
 go 1.16
 
 require (
-	cuelang.org/go v0.0.15
+	cuelang.org/go v0.4.0
 	github.com/BurntSushi/toml v0.3.1
 	github.com/KeisukeYamashita/go-vcl v0.4.0
 	github.com/basgys/goxml2json v1.1.0
@@ -18,7 +18,7 @@ require (
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/moby/buildkit v0.8.2
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/open-policy-agent/opa v0.29.1
+	github.com/open-policy-agent/opa v0.29.4
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/shteou/go-ignore v0.3.0
 	github.com/spf13/cobra v1.1.3
